@@ -14,6 +14,9 @@ public sealed class ChatService(
     public Task<Conversation> CreateConversationAsync(CancellationToken cancellationToken = default) =>
         conversationRepository.CreateAsync(cancellationToken);
 
+    public Task DeleteConversationAsync(Guid conversationId, CancellationToken cancellationToken = default) =>
+        conversationRepository.DeleteAsync(conversationId, cancellationToken);
+
     public async IAsyncEnumerable<AiStreamEvent> SendMessageAsync(
         Guid conversationId,
         string userMessage,

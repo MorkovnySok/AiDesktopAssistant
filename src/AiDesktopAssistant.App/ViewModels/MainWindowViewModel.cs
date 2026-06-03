@@ -18,6 +18,8 @@ public sealed class MainWindowViewModel : ViewModelBase
     private readonly IMainWindowActivationService _mainWindowActivationService;
     private readonly ILogger<MainWindowViewModel> _logger;
     private readonly AsyncRelayCommand _sendCommand;
+    private readonly AsyncRelayCommand _newConversationCommand;
+    private readonly AsyncRelayCommand _deleteConversationCommand;
     private ConversationViewModel? _selectedConversation;
     private string _userInput = string.Empty;
     private bool _isStreaming;
@@ -40,7 +42,11 @@ public sealed class MainWindowViewModel : ViewModelBase
         _mainWindowActivationService = mainWindowActivationService;
         _logger = logger;
         _sendCommand = new AsyncRelayCommand(SendAsync, CanSend);
+        _newConversationCommand = new AsyncRelayCommand(NewConversationAsync, CanStartNewConversation);
+        _deleteConversationCommand = new AsyncRelayCommand(DeleteSelectedConversationAsync, CanDeleteSelectedConversation);
         SendCommand = _sendCommand;
+        NewConversationCommand = _newConversationCommand;
+        DeleteConversationCommand = _deleteConversationCommand;
         _globalHotkeyService.Pressed += OnGlobalHotkeyPressed;
     }
 
@@ -48,15 +54,26 @@ public sealed class MainWindowViewModel : ViewModelBase
     public ObservableCollection<ChatMessageViewModel> Messages { get; } = [];
 
     public ICommand SendCommand { get; }
+    public ICommand NewConversationCommand { get; }
+    public ICommand DeleteConversationCommand { get; }
 
     public ConversationViewModel? SelectedConversation
     {
         get => _selectedConversation;
         set
         {
-            if (SetProperty(ref _selectedConversation, value) && value is not null)
+            if (SetProperty(ref _selectedConversation, value))
             {
-                _ = LoadConversationMessagesAsync(value.Id);
+                _deleteConversationCommand.RaiseCanExecuteChanged();
+
+                if (value is not null)
+                {
+                    _ = LoadConversationMessagesAsync(value.Id);
+                }
+                else
+                {
+                    Messages.Clear();
+                }
             }
         }
     }
@@ -81,6 +98,8 @@ public sealed class MainWindowViewModel : ViewModelBase
             if (SetProperty(ref _isStreaming, value))
             {
                 _sendCommand.RaiseCanExecuteChanged();
+                _newConversationCommand.RaiseCanExecuteChanged();
+                _deleteConversationCommand.RaiseCanExecuteChanged();
             }
         }
     }
@@ -112,6 +131,64 @@ public sealed class MainWindowViewModel : ViewModelBase
 
     private bool CanSend() =>
         !IsStreaming && SelectedConversation is not null && !string.IsNullOrWhiteSpace(UserInput);
+
+    private bool CanStartNewConversation() => !IsStreaming;
+
+    private bool CanDeleteSelectedConversation() =>
+        !IsStreaming && SelectedConversation is not null;
+
+    private async Task NewConversationAsync()
+    {
+        try
+        {
+            await CreateAndSelectConversationAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create a new conversation.");
+        }
+    }
+
+    private async Task DeleteSelectedConversationAsync()
+    {
+        var conversation = SelectedConversation;
+        if (conversation is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var deletedIndex = Conversations.IndexOf(conversation);
+            await _chatService.DeleteConversationAsync(conversation.Id);
+            Conversations.Remove(conversation);
+            UserInput = string.Empty;
+
+            if (Conversations.Count == 0)
+            {
+                await CreateAndSelectConversationAsync();
+                return;
+            }
+
+            var nextIndex = Math.Clamp(deletedIndex, 0, Conversations.Count - 1);
+            SelectedConversation = Conversations[nextIndex];
+            MoveInputCaretToEndSignal++;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete conversation {ConversationId}.", conversation.Id);
+        }
+    }
+
+    private async Task CreateAndSelectConversationAsync()
+    {
+        var conversation = await _chatService.CreateConversationAsync();
+        var viewModel = new ConversationViewModel(conversation);
+        Conversations.Insert(0, viewModel);
+        UserInput = string.Empty;
+        SelectedConversation = viewModel;
+        MoveInputCaretToEndSignal++;
+    }
 
     private async Task SendAsync()
     {

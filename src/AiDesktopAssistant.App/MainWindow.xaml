@@ -4,9 +4,39 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:behaviors="clr-namespace:AiDesktopAssistant.App.Behaviors"
+        xmlns:mdxam="clr-namespace:MdXaml;assembly=MdXaml"
         mc:Ignorable="d"
         Title="AI Desktop Assistant" Height="720" Width="1120"
         MinHeight="520" MinWidth="860">
+    <Window.Resources>
+        <Style x:Key="SidebarButtonStyle" TargetType="{x:Type Button}">
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="Background" Value="#374151" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderBrush" Value="#4B5563" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+
+        <Style x:Key="DangerSidebarButtonStyle"
+               TargetType="{x:Type Button}"
+               BasedOn="{StaticResource SidebarButtonStyle}">
+            <Setter Property="Background" Value="#7F1D1D" />
+            <Setter Property="BorderBrush" Value="#991B1B" />
+        </Style>
+
+        <Style x:Key="MessageMarkdownStyle" TargetType="{x:Type mdxam:MarkdownScrollViewer}">
+            <Setter Property="IsToolBarVisible" Value="False" />
+            <Setter Property="VerticalScrollBarVisibility" Value="Disabled" />
+            <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="#111827" />
+            <Setter Property="FontFamily" Value="Segoe UI" />
+            <Setter Property="FontSize" Value="14" />
+        </Style>
+    </Window.Resources>
+
     <Grid Background="#F5F6F8">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="260" />
@@ -15,12 +45,28 @@
 
         <Border Grid.Column="0" Background="#1F2937" Padding="16">
             <DockPanel LastChildFill="True">
-                <TextBlock DockPanel.Dock="Top"
-                           Text="Conversations"
-                           Foreground="White"
-                           FontSize="18"
-                           FontWeight="SemiBold"
-                           Margin="0,0,0,16" />
+                <StackPanel DockPanel.Dock="Top" Margin="0,0,0,16">
+                    <TextBlock Text="Conversations"
+                               Foreground="White"
+                               FontSize="18"
+                               FontWeight="SemiBold" />
+                    <Grid Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="8" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button Grid.Column="0"
+                                Content="New chat"
+                                Command="{Binding NewConversationCommand}"
+                                Style="{StaticResource SidebarButtonStyle}" />
+                        <Button Grid.Column="2"
+                                Content="Delete"
+                                Command="{Binding DeleteConversationCommand}"
+                                Style="{StaticResource DangerSidebarButtonStyle}" />
+                    </Grid>
+                </StackPanel>
                 <ListBox ItemsSource="{Binding Conversations}"
                          SelectedItem="{Binding SelectedConversation}"
                          Background="Transparent"
@@ -99,11 +145,8 @@
                                                Margin="0,8,0,0" />
                                 </Expander>
 
-                                <TextBlock Text="{Binding Content}"
-                                           TextWrapping="WrapWithOverflow"
-                                           FontFamily="Consolas"
-                                           FontSize="14"
-                                           Foreground="#111827" />
+                                <mdxam:MarkdownScrollViewer Markdown="{Binding Content}"
+                                                            Style="{StaticResource MessageMarkdownStyle}" />
                             </StackPanel>
                         </Border>
                     </DataTemplate>

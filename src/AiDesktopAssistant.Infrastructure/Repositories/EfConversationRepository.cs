@@ -43,6 +43,21 @@ public sealed class EfConversationRepository(IDbContextFactory<AssistantDbContex
             .ToListAsync(cancellationToken);
     }
 
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        var conversation = await dbContext.Conversations
+            .FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
+
+        if (conversation is null)
+        {
+            return;
+        }
+
+        dbContext.Conversations.Remove(conversation);
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task AddMessagesAsync(
         Guid conversationId,
         IReadOnlyList<ChatMessage> messages,
