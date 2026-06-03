@@ -57,15 +57,7 @@ public sealed class OllamaChatClient(HttpClient httpClient) : IAiChatClient
                 }
 
                 OllamaChatResponse? chunk;
-                try
-                {
-                    chunk = JsonSerializer.Deserialize<OllamaChatResponse>(line, JsonOptions);
-                }
-                catch (JsonException ex)
-                {
-                    yield return new AiStreamEvent(AiStreamEventType.Content, $"\n[Ollama returned an invalid stream chunk: {ex.Message}]\n");
-                    continue;
-                }
+                chunk = JsonSerializer.Deserialize<OllamaChatResponse>(line, JsonOptions);
 
                 if (!string.IsNullOrEmpty(chunk?.Message?.Thinking))
                 {
@@ -117,7 +109,8 @@ public sealed class OllamaChatClient(HttpClient httpClient) : IAiChatClient
         }
         catch (HttpRequestException ex)
         {
-            return (null, $"Unable to reach Ollama at '{httpClient.BaseAddress}'. Make sure Ollama is running and the configured model is available. {ex.Message}");
+            return (null,
+                $"Unable to reach Ollama at '{httpClient.BaseAddress}'. Make sure Ollama is running and the configured model is available. {ex.Message}");
         }
         catch (TaskCanceledException ex)
         {
@@ -154,20 +147,25 @@ public sealed class OllamaChatClient(HttpClient httpClient) : IAiChatClient
 
     private sealed record OllamaChatRequest(
         [property: JsonPropertyName("model")] string Model,
-        [property: JsonPropertyName("messages")] IReadOnlyList<OllamaChatMessage> Messages,
+        [property: JsonPropertyName("messages")]
+        IReadOnlyList<OllamaChatMessage> Messages,
         [property: JsonPropertyName("stream")] bool Stream,
         [property: JsonPropertyName("think")] bool Think);
 
     private sealed record OllamaChatMessage(
         [property: JsonPropertyName("role")] string Role,
-        [property: JsonPropertyName("content")] string Content);
+        [property: JsonPropertyName("content")]
+        string Content);
 
     private sealed record OllamaChatResponse(
-        [property: JsonPropertyName("message")] OllamaMessage? Message,
+        [property: JsonPropertyName("message")]
+        OllamaMessage? Message,
         [property: JsonPropertyName("done")] bool Done);
 
     private sealed record OllamaMessage(
         [property: JsonPropertyName("role")] string? Role,
-        [property: JsonPropertyName("content")] string? Content,
-        [property: JsonPropertyName("thinking")] string? Thinking);
+        [property: JsonPropertyName("content")]
+        string? Content,
+        [property: JsonPropertyName("thinking")]
+        string? Thinking);
 }
