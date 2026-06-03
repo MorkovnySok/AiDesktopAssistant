@@ -22,6 +22,7 @@ public sealed class MainWindowViewModel : ViewModelBase
     private string _userInput = string.Empty;
     private bool _isStreaming;
     private bool _isCapturingSelection;
+    private int _moveInputCaretToEndSignal;
     private CancellationTokenSource? _streamingCancellation;
 
     public MainWindowViewModel(
@@ -82,6 +83,12 @@ public sealed class MainWindowViewModel : ViewModelBase
                 _sendCommand.RaiseCanExecuteChanged();
             }
         }
+    }
+
+    public int MoveInputCaretToEndSignal
+    {
+        get => _moveInputCaretToEndSignal;
+        private set => SetProperty(ref _moveInputCaretToEndSignal, value);
     }
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
@@ -215,11 +222,10 @@ public sealed class MainWindowViewModel : ViewModelBase
                 return;
             }
 
-            UserInput = string.IsNullOrWhiteSpace(UserInput)
-                ? selectedText.Trim()
-                : $"{UserInput.TrimEnd()}{Environment.NewLine}{Environment.NewLine}{selectedText.Trim()}";
-
+            UserInput = FormatSelectedTextInsertion(UserInput, selectedText);
             _mainWindowActivationService.Activate();
+            MoveInputCaretToEndSignal++;
+
             _logger.LogInformation("Selected text added to chat input. Length: {Length}", selectedText.Length);
         }
         catch (Exception ex)
@@ -230,5 +236,16 @@ public sealed class MainWindowViewModel : ViewModelBase
         {
             _isCapturingSelection = false;
         }
+    }
+
+    private static string FormatSelectedTextInsertion(string currentInput, string selectedText)
+    {
+        var trimmedSelection = selectedText.Trim();
+        if (string.IsNullOrWhiteSpace(currentInput))
+        {
+            return $"{trimmedSelection}{Environment.NewLine}{Environment.NewLine}";
+        }
+
+        return $"{currentInput.TrimEnd()}{Environment.NewLine}{Environment.NewLine}{trimmedSelection}{Environment.NewLine}{Environment.NewLine}";
     }
 }

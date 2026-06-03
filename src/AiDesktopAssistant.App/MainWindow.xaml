@@ -64,7 +64,15 @@
                      behaviors:ListBoxScrollBehavior.AutoScrollToEnd="True"
                      BorderThickness="0"
                      Background="Transparent"
+                     HorizontalContentAlignment="Stretch"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                      ScrollViewer.VerticalScrollBarVisibility="Auto">
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        <Setter Property="Padding" Value="0" />
+                    </Style>
+                </ListBox.ItemContainerStyle>
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <Border Margin="0,0,0,14"
@@ -82,16 +90,17 @@
                                 <Expander Header="Reasoning / thinking"
                                           Visibility="{Binding HasReasoning, Converter={StaticResource BooleanToVisibilityConverter}}"
                                           Margin="0,0,0,10"
+                                          HorizontalContentAlignment="Stretch"
                                           IsExpanded="False">
                                     <TextBlock Text="{Binding ReasoningContent}"
-                                               TextWrapping="Wrap"
+                                               TextWrapping="WrapWithOverflow"
                                                FontFamily="Consolas"
                                                Foreground="#6B7280"
                                                Margin="0,8,0,0" />
                                 </Expander>
 
                                 <TextBlock Text="{Binding Content}"
-                                           TextWrapping="Wrap"
+                                           TextWrapping="WrapWithOverflow"
                                            FontFamily="Consolas"
                                            FontSize="14"
                                            Foreground="#111827" />
@@ -116,8 +125,11 @@
 
                     <TextBox Grid.Column="0"
                              Text="{Binding UserInput, UpdateSourceTrigger=PropertyChanged}"
+                             behaviors:TextBoxInputBehavior.SubmitCommand="{Binding SendCommand}"
+                             behaviors:TextBoxInputBehavior.MoveCaretToEndSignal="{Binding MoveInputCaretToEndSignal}"
                              AcceptsReturn="True"
                              TextWrapping="Wrap"
+                             HorizontalScrollBarVisibility="Disabled"
                              VerticalScrollBarVisibility="Auto"
                              MinHeight="82"
                              FontFamily="Consolas"
