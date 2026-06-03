@@ -19,7 +19,7 @@ public static class DependencyInjection
         services.Configure<AiOptions>(configuration.GetSection(AiOptions.SectionName));
         services.Configure<DatabaseOptions>(configuration.GetSection(DatabaseOptions.SectionName));
 
-        services.AddDbContext<AssistantDbContext>((provider, options) =>
+        services.AddDbContextFactory<AssistantDbContext>((provider, options) =>
         {
             var databaseOptions = provider.GetRequiredService<IOptions<DatabaseOptions>>().Value;
             options.UseSqlite(databaseOptions.ConnectionString);
@@ -41,7 +41,8 @@ public static class DependencyInjection
     public static async Task InitializeDatabaseAsync(this IServiceProvider services)
     {
         await using var scope = services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<AssistantDbContext>();
+        var dbContextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AssistantDbContext>>();
+        await using var db = await dbContextFactory.CreateDbContextAsync();
         var connectionString = db.Database.GetConnectionString();
         var databasePath = GetSqliteDatabasePath(connectionString);
 

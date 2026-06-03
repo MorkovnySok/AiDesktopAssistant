@@ -7,6 +7,7 @@ using AiDesktopAssistant.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Application = System.Windows.Application;
 
 namespace AiDesktopAssistant.App;
@@ -58,6 +59,11 @@ public partial class App : Application
             {
                 configuration.SetBasePath(AppContext.BaseDirectory);
                 configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+            })
+            .ConfigureLogging(logging =>
+            {
+                logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
+                logging.AddFilter("System.Net.Http.HttpClient", LogLevel.Warning);
             })
             .ConfigureServices((context, services) =>
             {

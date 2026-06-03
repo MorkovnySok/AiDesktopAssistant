@@ -23,18 +23,21 @@ public sealed class ChatService(
             ?? throw new InvalidOperationException($"Conversation '{conversationId}' was not found.");
 
         var now = DateTime.UtcNow;
+        var title = conversation.Title;
         if (conversation.Messages.Count == 0)
         {
-            conversation.Title = CreateTitle(userMessage);
+            title = CreateTitle(userMessage);
+            conversation.Title = title;
         }
 
-        conversation.Messages.Add(new ChatMessage
+        var userChatMessage = new ChatMessage
         {
             ConversationId = conversation.Id,
             Role = MessageRole.User,
             Content = userMessage,
             CreatedAt = now
-        });
+        };
+        conversation.Messages.Add(userChatMessage);
 
         var assistantMessage = new ChatMessage
         {
@@ -46,6 +49,13 @@ public sealed class ChatService(
         };
         conversation.Messages.Add(assistantMessage);
         conversation.UpdatedAt = DateTime.UtcNow;
+
+        await conversationRepository.AddMessagesAsync(
+            conversation.Id,
+            [userChatMessage, assistantMessage],
+            title,
+            conversation.UpdatedAt,
+            cancellationToken);
 
         var options = aiOptions.Value;
         var request = new AiChatRequest(
@@ -79,7 +89,11 @@ public sealed class ChatService(
         finally
         {
             conversation.UpdatedAt = DateTime.UtcNow;
-            await conversationRepository.SaveAsync(conversation, CancellationToken.None);
+            await conversationRepository.UpdateAssistantMessageAsync(
+                conversation.Id,
+                assistantMessage,
+                conversation.UpdatedAt,
+                CancellationToken.None);
         }
 
         if (!completed)
