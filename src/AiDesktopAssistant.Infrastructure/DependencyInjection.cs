@@ -54,7 +54,7 @@ public static class DependencyInjection
             }
         }
 
-        await db.Database.EnsureCreatedAsync();
+        await db.Database.MigrateAsync();
     }
 
     private static string? GetSqliteDatabasePath(string? connectionString)

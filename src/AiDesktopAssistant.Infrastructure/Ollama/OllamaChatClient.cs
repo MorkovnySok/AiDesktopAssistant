@@ -33,7 +33,13 @@ public sealed class OllamaChatClient(HttpClient httpClient) : IAiChatClient
             yield break;
         }
 
-        HttpResponseMessage? response = startResult.Response;
+        var response = startResult.Response;
+        if (response is null)
+        {
+            yield return new AiStreamEvent(AiStreamEventType.Content, "Ollama request failed before a response was returned.");
+            yield return new AiStreamEvent(AiStreamEventType.Completed);
+            yield break;
+        }
 
         try
         {
@@ -48,9 +54,14 @@ public sealed class OllamaChatClient(HttpClient httpClient) : IAiChatClient
             await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
             using var reader = new StreamReader(stream, Encoding.UTF8);
 
-            while (!reader.EndOfStream && !cancellationToken.IsCancellationRequested)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 var line = await reader.ReadLineAsync(cancellationToken);
+                if (line is null)
+                {
+                    break;
+                }
+
                 if (string.IsNullOrWhiteSpace(line))
                 {
                     continue;

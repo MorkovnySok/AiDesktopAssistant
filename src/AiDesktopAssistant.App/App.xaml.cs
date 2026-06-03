@@ -1,4 +1,5 @@
 using System.Windows;
+using AiDesktopAssistant.App.Services;
 using AiDesktopAssistant.App.ViewModels;
 using AiDesktopAssistant.Core.Interfaces;
 using AiDesktopAssistant.Core.Services;
@@ -6,6 +7,7 @@ using AiDesktopAssistant.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Application = System.Windows.Application;
 
 namespace AiDesktopAssistant.App;
 
@@ -29,6 +31,9 @@ public partial class App : Application
         mainWindow.DataContext = viewModel;
         await viewModel.InitializeAsync();
         mainWindow.Show();
+
+        var hotkeyService = _host.Services.GetRequiredService<IGlobalHotkeyService>();
+        await hotkeyService.StartAsync();
     }
 
     protected override async void OnExit(ExitEventArgs e)
@@ -57,6 +62,9 @@ public partial class App : Application
             .ConfigureServices((context, services) =>
             {
                 services.AddInfrastructure(context.Configuration);
+                services.AddSingleton<IGlobalHotkeyService, WindowsGlobalHotkeyService>();
+                services.AddSingleton<ISelectedTextCaptureService, ClipboardSelectedTextCaptureService>();
+                services.AddSingleton<IMainWindowActivationService, MainWindowActivationService>();
                 services.AddScoped<IChatService, ChatService>();
                 services.AddTransient<MainWindow>();
                 services.AddTransient<MainWindowViewModel>();
