@@ -105,53 +105,51 @@
                            Margin="0,4,0,0" />
             </StackPanel>
 
-            <ListBox Grid.Row="1"
-                     ItemsSource="{Binding Messages}"
-                     behaviors:ListBoxScrollBehavior.AutoScrollToEnd="True"
-                     BorderThickness="0"
-                     Background="Transparent"
-                     HorizontalContentAlignment="Stretch"
-                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                     ScrollViewer.VerticalScrollBarVisibility="Auto">
-                <ListBox.ItemContainerStyle>
-                    <Style TargetType="ListBoxItem">
-                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                        <Setter Property="Padding" Value="0" />
-                    </Style>
-                </ListBox.ItemContainerStyle>
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <Border Margin="0,0,0,14"
-                                Padding="14"
-                                Background="White"
-                                BorderBrush="#E5E7EB"
-                                BorderThickness="1"
-                                CornerRadius="8">
-                            <StackPanel>
-                                <TextBlock Text="{Binding RoleLabel}"
-                                           FontWeight="Bold"
-                                           Foreground="#374151"
-                                           Margin="0,0,0,8" />
+            <ScrollViewer Grid.Row="1"
+                          behaviors:ScrollViewerScrollBehavior.AutoScrollToEnd="True"
+                          CanContentScroll="False"
+                          HorizontalScrollBarVisibility="Disabled"
+                          VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding Messages}">
+                    <ItemsControl.ItemContainerStyle>
+                        <Style TargetType="{x:Type ContentPresenter}">
+                            <Setter Property="HorizontalAlignment" Value="Stretch" />
+                        </Style>
+                    </ItemsControl.ItemContainerStyle>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Margin="0,0,0,14"
+                                    Padding="14"
+                                    Background="White"
+                                    BorderBrush="#E5E7EB"
+                                    BorderThickness="1"
+                                    CornerRadius="8">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding RoleLabel}"
+                                               FontWeight="Bold"
+                                               Foreground="#374151"
+                                               Margin="0,0,0,8" />
 
-                                <Expander Header="Reasoning / thinking"
-                                          Visibility="{Binding HasReasoning, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                          Margin="0,0,0,10"
-                                          HorizontalContentAlignment="Stretch"
-                                          IsExpanded="False">
-                                    <TextBlock Text="{Binding ReasoningContent}"
-                                               TextWrapping="WrapWithOverflow"
-                                               FontFamily="Consolas"
-                                               Foreground="#6B7280"
-                                               Margin="0,8,0,0" />
-                                </Expander>
+                                    <Expander Header="Reasoning / thinking"
+                                              Visibility="{Binding HasReasoning, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                              Margin="0,0,0,10"
+                                              HorizontalContentAlignment="Stretch"
+                                              IsExpanded="False">
+                                        <TextBlock Text="{Binding ReasoningContent}"
+                                                   TextWrapping="WrapWithOverflow"
+                                                   FontFamily="Consolas"
+                                                   Foreground="#6B7280"
+                                                   Margin="0,8,0,0" />
+                                    </Expander>
 
-                                <mdxam:MarkdownScrollViewer Markdown="{Binding Content}"
-                                                            Style="{StaticResource MessageMarkdownStyle}" />
-                            </StackPanel>
-                        </Border>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
+                                    <mdxam:MarkdownScrollViewer Markdown="{Binding Content}"
+                                                                Style="{StaticResource MessageMarkdownStyle}" />
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
 
             <Border Grid.Row="2"
                     Margin="0,14,0,0"
